@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  </head>
+
+  <body>
+    <main id="main-holder">
+      <a href="/logout" id="logout">Logout</a>
+
+      <h1 id="login-header">Login</h1>
+
+      <div id="login-error-msg-holder">
+        <p id="login-error-msg">
+          Invalid username
+          <span id="error-msg-second-line">and/or password</span>
+        </p>
+      </div>
+
+      <a
+        href="https://dev-nb6gol20tvvtznpi.us.auth0.com/authorize?client_id=tNrgHVlimsQM4PMFYqc9vYc3tlhhbjTr&redirect_uri=http%3A%2F%2Flocalhost%3A3000&response_type=code&response_mode=query"
+        id="login-form-submit"
+        >Login</a
+      >
+    </main>
+  </body>
+
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      display: grid;
+      justify-items: center;
+      align-items: center;
+      background-color: #3a3a3a;
+    }
+
+    #logout {
+      opacity: 0;
+    }
+
+    #main-holder {
+      width: 50%;
+      height: 70%;
+      display: grid;
+      justify-items: center;
+      align-items: center;
+      background-color: white;
+      border-radius: 7px;
+      box-shadow: 0px 0px 5px 2px black;
+    }
+
+    #login-error-msg-holder {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      justify-items: center;
+      align-items: center;
+    }
+
+    #login-error-msg {
+      width: 23%;
+      text-align: center;
+      margin: 0;
+      padding: 5px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #8a0000;
+      border: 1px solid #8a0000;
+      background-color: #e58f8f;
+      opacity: 0;
+    }
+
+    #error-msg-second-line {
+      display: block;
+    }
+
+    #login-form-submit {
+      width: fit-content;
+      padding: 7px;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      background-color: #3a3a3a;
+      cursor: pointer;
+      outline: none;
+      text-align: center;
+    }
+  </style>
+
+  <script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+
+    if (urlParams.has('code')) {
+      axios({
+        method: 'post',
+        url: '/api/login',
+        data: {
+          code: urlParams.get('code'),
+        },
+      }).then((response) => {
+        const token = response.data?.access_token;
+
+        if (token) {
+          sessionStorage.setItem('token', token);
+          window.location.replace('/');
+        }
+      });
+    }
+
+    const token = sessionStorage.getItem('token');
+
+    if (token) {
+      axios
+        .get('/', {
+          headers: {
+            Authorization: `Baerer ${token}`,
+          },
+        })
+        .then((res) => {
+          const mainHolder = document.getElementById('main-holder');
+          const loginHeader = document.getElementById('login-header');
+          const loginBtn = document.getElementById('login-form-submit');
+          loginHeader.remove();
+          loginBtn.remove();
+          mainHolder.append('Successfully authorized');
+          logoutLink.style.opacity = 1;
+        });
+    }
+
+    const loginButton = document.getElementById('login-form-submit');
+    const loginErrorMsg = document.getElementById('login-error-msg');
+    const logoutLink = document.getElementById('logout');
+
+    logoutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem('token');
+      location.reload();
+    });
+  </script>
+</html>

@@ -10,11 +10,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const AUTH_BASE_URL = 'https://dev-nb6gol20tvvtznpi.us.auth0.com';
+const clientId = 'tNrgHVlimsQM4PMFYqc9vYc3tlhhbjTr';
+const clientSecret =
+  'ny0AXn2IbxFB5l7J_MusZuHaVVX5HEu8LCCHjPisOSbbU1w85oEI_eHkImOEiLix';
 
 app.get('/', async (req, res) => {
   const authHeader = req.header('Authorization') || '';
   const token = authHeader.replace('Baerer ', '');
-
+  console.log('token ' + token);
   try {
     if (!token) {
       throw new Error('Unauthorized');
@@ -26,31 +29,22 @@ app.get('/', async (req, res) => {
       },
     });
 
-    if (!userRes?.data?.name) {
-      throw new Error(userRes?.statusText);
-    }
-
-    return res.json({
-      name: userRes.data.name,
-      logout: `http://localhost:${port}/logout`,
-    });
+    return res.json({ unauthorized: true });
   } catch (err) {
     res.sendFile(path.join(__dirname + '/index.html'));
   }
 });
 
 app.post('/api/login', async (req, res) => {
-  const { login, password } = req.body;
+  const { code } = req.body;
 
   try {
     const authRes = await axios.post(`${AUTH_BASE_URL}/oauth/token`, {
-      grant_type: 'password',
-      username: login,
-      password,
-      client_id: 'tNrgHVlimsQM4PMFYqc9vYc3tlhhbjTr',
-      client_secret:
-        'ny0AXn2IbxFB5l7J_MusZuHaVVX5HEu8LCCHjPisOSbbU1w85oEI_eHkImOEiLix',
-      audience: `${AUTH_BASE_URL}/api/v2/`,
+      grant_type: 'authorization_code',
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: 'http://localhost:3000/',
       scope: 'openid',
     });
 
